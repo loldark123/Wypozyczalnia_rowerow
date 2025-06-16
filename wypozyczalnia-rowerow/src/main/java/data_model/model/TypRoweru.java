@@ -1,4 +1,4 @@
-package projekt_java.model;
+package data_model.model;
 
 /**
  * Klasa reprezentująca typ roweru.

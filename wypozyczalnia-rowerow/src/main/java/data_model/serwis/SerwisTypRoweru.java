@@ -1,6 +1,6 @@
-package projekt_java.serwis;
+package data_model.serwis;
 
-import projekt_java.model.TypRoweru;
+import data_model.model.TypRoweru;
 import java.util.*;
 
 /**
