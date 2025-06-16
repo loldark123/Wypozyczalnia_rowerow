@@ -56,7 +56,8 @@ public class NowyKlientGUI {
                 }
 
                 if (!dowod.matches("[A-Z]{3}\\d{6}")) {
-                    JOptionPane.showMessageDialog(frame, "Niepoprawny numer dowodu (format: AAA123456).");
+                    JOptionPane.showMessageDialog(frame, "Niepoprawny numer dowodu (format: AAA123456). Gdzie \"AAA\" to trzy duze litery a reszta znakow to numery od "
+                    		+ "0 do 9");
                     return;
                 }
 

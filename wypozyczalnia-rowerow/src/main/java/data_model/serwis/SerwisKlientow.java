@@ -1,4 +1,4 @@
-package projekt_java.serwis;
+package data_model.serwis;
 
 import data_model.model.Klient;
 
