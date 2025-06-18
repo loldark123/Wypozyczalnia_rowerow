@@ -3,6 +3,8 @@ package projekt_java;
 import javax.swing.*;
 
 import java.awt.*;
+import data_model.io.PlikKlientowIO;
+import java.io.IOException;
 import data_model.model.Klient;
 import data_model.serwis.SerwisKlientow;
 
@@ -35,7 +37,11 @@ public class NowyKlientGUI {
             panel.add(dodajButton);
 
             //  Serwis do zarządzania klientami
-            SerwisKlientow serwis = new SerwisKlientow();
+           SerwisKlientow serwis = new SerwisKlientow();
+                PlikKlientowIO io = new PlikKlientowIO();
+                for (Klient k : io.wczytaj("klienci.dat")) {
+                    serwis.dodajKlienta(k);
+                }
 
             dodajButton.addActionListener(e -> {
                 String imie = imieField.getText().trim();
@@ -68,10 +74,26 @@ public class NowyKlientGUI {
 
                 // Tworzenie i dodawanie klienta , ewnetualnie wyrzucanie wyjatku w razie duplikacji
                 try {
-                    Klient k = new Klient(imie, nazwisko, dowod, opis);
-                    serwis.dodajKlienta(k);
-                    JOptionPane.showMessageDialog(frame, "Dodano klienta: " + k);
+                            // 🧱 Tworzenie obiektu Klient na podstawie danych z formularza
+                            Klient k = new Klient(imie, nazwisko, dowod, opis);
+
+                            // ✅ Próba dodania klienta do serwisu
+                            serwis.dodajKlienta(k);
+
+                            // 💾 Zapis całej listy klientów do pliku
+                            try {
+                                
+                                io.zapisz(serwis.pobierzWszystkichKlientow(), "klienci.dat"); // ⬅️ poprawna metoda
+                            } catch (IOException ex) {
+                                JOptionPane.showMessageDialog(frame, "Błąd zapisu do pliku: " + ex.getMessage());
+                                return;
+                            }
+
+                            // ✅ Potwierdzenie dla użytkownika
+                            JOptionPane.showMessageDialog(frame, "Dodano klienta: " + k);
+
                 } catch (IllegalArgumentException ex) {
+                    // ❌ Obsługa błędów biznesowych (np. duplikat dowodu)
                     JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
                 }
             });
