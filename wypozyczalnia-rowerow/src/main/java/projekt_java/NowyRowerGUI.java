@@ -1,6 +1,9 @@
 package projekt_java;
 
 import data_model.model.Rower;
+
+import konfiguracja.KonfiguracjaPlikow;
+
 import data_model.model.TypRoweru;
 import data_model.serwis.SerwisTypRoweru;
 import data_model.serwis.SerwisRowerow;

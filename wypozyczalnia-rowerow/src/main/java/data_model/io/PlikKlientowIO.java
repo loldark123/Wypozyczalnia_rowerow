@@ -7,6 +7,10 @@ import java.util.*;
 public class PlikKlientowIO {
 
     public void zapisz(List<Klient> klienci, String sciezka) throws IOException {
+    	
+    	 // 🔧 Tworzymy folder nadrzędny jeśli nie istnieje (np. data/)
+        new File(sciezka).getParentFile().mkdirs();
+        
         try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(sciezka))) {
             dos.writeInt(klienci.size());
             for (Klient k : klienci) {

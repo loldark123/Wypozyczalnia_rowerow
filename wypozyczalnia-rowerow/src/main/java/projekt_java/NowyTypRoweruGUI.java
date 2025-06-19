@@ -1,5 +1,7 @@
 package projekt_java;
 
+import konfiguracja.KonfiguracjaPlikow;
+
 import data_model.model.TypRoweru;
 
 import javax.swing.*;

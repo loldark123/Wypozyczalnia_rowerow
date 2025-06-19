@@ -2,6 +2,8 @@ package projekt_java;
 
 import javax.swing.*;
 
+import konfiguracja.KonfiguracjaPlikow;
+
 import java.awt.*;
 import data_model.io.PlikKlientowIO;
 import java.io.IOException;
@@ -14,7 +16,7 @@ public class NowyKlientGUI {
     	
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Dodawanie klienta");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setSize(400, 200);
             frame.setLocationRelativeTo(null);
 
@@ -39,7 +41,7 @@ public class NowyKlientGUI {
             //  Serwis do zarządzania klientami
            SerwisKlientow serwis = new SerwisKlientow();
                 PlikKlientowIO io = new PlikKlientowIO();
-                for (Klient k : io.wczytaj("klienci.dat")) {
+                for (Klient k : io.wczytaj(KonfiguracjaPlikow.SCIEZKA_KLIENCI)) {
                     serwis.dodajKlienta(k);
                 }
 
@@ -83,7 +85,7 @@ public class NowyKlientGUI {
                             // 💾 Zapis całej listy klientów do pliku
                             try {
                                 
-                                io.zapisz(serwis.pobierzWszystkichKlientow(), "klienci.dat"); // ⬅️ poprawna metoda
+                                io.zapisz(serwis.pobierzWszystkichKlientow(), KonfiguracjaPlikow.SCIEZKA_KLIENCI); // ⬅️ poprawna metoda
                             } catch (IOException ex) {
                                 JOptionPane.showMessageDialog(frame, "Błąd zapisu do pliku: " + ex.getMessage());
                                 return;

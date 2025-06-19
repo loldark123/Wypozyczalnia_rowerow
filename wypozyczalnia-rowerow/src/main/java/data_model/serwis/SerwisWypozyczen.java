@@ -1,8 +1,8 @@
-package projekt_java.serwis;
+package data_model.serwis;
 
-import projekt_java.model.Wypozyczenie;
-import projekt_java.model.Rower;
-import projekt_java.model.Klient;
+import data_model.model.Wypozyczenie;
+import data_model.model.Rower;
+import data_model.model.Klient;
 
 import java.time.LocalDateTime;
 import java.util.*;

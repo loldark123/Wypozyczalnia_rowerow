@@ -11,8 +11,12 @@ import java.util.stream.*;
 public class SerwisKlientow {
     private final List<Klient> klienci = new ArrayList<>();
 
-    // Dodaj klienta
+    // Dodaj klienta, zapobiega duplikatom
     public void dodajKlienta(Klient klient) {
+        Optional<Klient> istnieje = znajdzKlientaPoDowodzie(klient.getNumerDowodu());
+        if (istnieje.isPresent()) {
+            throw new IllegalArgumentException("Klient z takim numerem dowodu już istnieje.");
+        }
         klienci.add(klient);
     }
 
