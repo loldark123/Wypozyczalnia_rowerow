@@ -1,9 +1,13 @@
 package data_model.model;
 
+import java.io.Serializable;
+
 /**
  * Klasa reprezentująca rower.
  */
-public class Rower {
+public class Rower implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private TypRoweru typ;
     private String marka;
     private String model;
@@ -19,7 +23,7 @@ public class Rower {
     }
 
     public TypRoweru getTyp() {
-        return typ; //czy tu poda nazwe typu?
+        return typ;
     }
 
     public void setTyp(TypRoweru typ) {
@@ -60,10 +64,21 @@ public class Rower {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(marka);
-        sb.append(" ");
-        sb.append(model);
-        return sb.toString();
+        return marka + " " + model;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Rower)) return false;
+        Rower other = (Rower) obj;
+        return marka.equalsIgnoreCase(other.marka)
+            && model.equalsIgnoreCase(other.model)
+            && typ.getNazwa().equalsIgnoreCase(other.typ.getNazwa());
+    }
+
+    @Override
+    public int hashCode() {
+        return (marka + model + typ.getNazwa()).toLowerCase().hashCode();
     }
 }

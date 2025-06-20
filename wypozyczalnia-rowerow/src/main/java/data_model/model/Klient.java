@@ -52,4 +52,18 @@ public class Klient {
     public String toString() {
         return imie + " " + nazwisko;
     }
+    
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Klient)) return false;
+        Klient other = (Klient) obj;
+        return numerDowodu != null && numerDowodu.equalsIgnoreCase(other.numerDowodu);
+    }
+
+    @Override
+    public int hashCode() {
+        return numerDowodu == null ? 0 : numerDowodu.toLowerCase().hashCode();
+    }
 }

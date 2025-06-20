@@ -1,9 +1,13 @@
 package data_model.model;
 
+import java.io.Serializable;
+
 /**
  * Klasa reprezentująca typ roweru.
  */
-public class TypRoweru {
+public class TypRoweru implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String nazwa;
     private String opis;
 

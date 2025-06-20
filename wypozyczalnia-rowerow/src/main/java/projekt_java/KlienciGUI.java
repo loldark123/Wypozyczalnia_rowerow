@@ -97,11 +97,14 @@ public class KlienciGUI {
             // Działanie: odśwież listę po ponownym wczytaniu pliku
             odswiezBtn.addActionListener(e -> {
                 List<Klient> nowaLista = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_KLIENCI);
+                serwis.wyczysc(); // dodaj taką metodę
+                for (Klient k : nowaLista) {
+                    serwis.dodajKlienta(k);
+                }
                 listModel.clear();
                 for (Klient k : nowaLista) {
                     listModel.addElement(k);
                 }
-                
                
             });
             
