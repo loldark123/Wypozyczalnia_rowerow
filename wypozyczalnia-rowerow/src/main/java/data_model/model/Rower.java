@@ -1,6 +1,7 @@
 package data_model.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Klasa reprezentująca rower.
@@ -13,13 +14,18 @@ public class Rower implements Serializable {
     private String model;
     private int rozmiarKola;
     private String opis;
+    private String numerSeryjny;
 
-    public Rower(TypRoweru typ, String marka, String model, int rozmiarKola, String opis) {
+    public Rower(TypRoweru typ, String marka, String model, int rozmiarKola, String opis, String numerSeryjny) {
+        if (numerSeryjny == null || numerSeryjny.trim().isEmpty()) {
+            throw new IllegalArgumentException("Numer seryjny nie może być pusty.");
+        }
         this.typ = typ;
         this.marka = marka;
         this.model = model;
         this.rozmiarKola = rozmiarKola;
         this.opis = opis;
+        this.numerSeryjny = numerSeryjny.trim();
     }
 
     public TypRoweru getTyp() {
@@ -62,9 +68,20 @@ public class Rower implements Serializable {
         this.opis = opis;
     }
 
+    public String getNumerSeryjny() {
+        return numerSeryjny;
+    }
+
+    public void setNumerSeryjny(String numerSeryjny) {
+        if (numerSeryjny == null || numerSeryjny.trim().isEmpty()) {
+            throw new IllegalArgumentException("Numer seryjny nie może być pusty.");
+        }
+        this.numerSeryjny = numerSeryjny.trim();
+    }
+
     @Override
     public String toString() {
-        return marka + " " + model;
+        return marka + " " + model + " (" + numerSeryjny + ")";
     }
 
     @Override
@@ -72,13 +89,11 @@ public class Rower implements Serializable {
         if (this == obj) return true;
         if (!(obj instanceof Rower)) return false;
         Rower other = (Rower) obj;
-        return marka.equalsIgnoreCase(other.marka)
-            && model.equalsIgnoreCase(other.model)
-            && typ.getNazwa().equalsIgnoreCase(other.typ.getNazwa());
+        return Objects.equals(numerSeryjny, other.numerSeryjny);
     }
 
     @Override
     public int hashCode() {
-        return (marka + model + typ.getNazwa()).toLowerCase().hashCode();
+        return Objects.hash(numerSeryjny);
     }
 }

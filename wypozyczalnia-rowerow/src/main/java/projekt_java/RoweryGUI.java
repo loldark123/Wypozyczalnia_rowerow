@@ -1,5 +1,3 @@
-// GUI do zarządzania rowerami (lista, dodawanie, usuwanie, zapis/odczyt z pliku) z walidacją duplikatów
-
 package projekt_java;
 
 import data_model.model.Rower;
@@ -7,6 +5,7 @@ import data_model.model.TypRoweru;
 import data_model.serwis.SerwisRowerow;
 import data_model.serwis.SerwisTypRoweru;
 import data_model.io.PlikRowerowIO;
+import data_model.io.PlikTypowRowerowIO;
 import konfiguracja.KonfiguracjaPlikow;
 
 import javax.swing.*;
@@ -26,30 +25,28 @@ public class RoweryGUI {
             SerwisRowerow serwis = new SerwisRowerow();
             SerwisTypRoweru serwisTypow = new SerwisTypRoweru();
             PlikRowerowIO io = new PlikRowerowIO();
+            PlikTypowRowerowIO typyIO = new PlikTypowRowerowIO();
 
-            // Wczytaj rowery z pliku
+            // Wczytaj rowery
             List<Rower> listaZRozszerzenia = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_ROWERY);
-            for (Rower r : listaZRozszerzenia) {
-                serwis.dodajRower(r);
-            }
+            for (Rower r : listaZRozszerzenia) serwis.dodajRower(r);
 
-            // Przykładowe typy (jeśli nie masz wczytywania typów z pliku)
-            if (serwisTypow.pobierzWszystkieTypy().isEmpty()) {
-                serwisTypow.dodajTypRoweru(new TypRoweru("Górski", "Do jazdy w terenie"));
-                serwisTypow.dodajTypRoweru(new TypRoweru("Miejski", "Do jazdy po mieście"));
-            }
+            // Wczytaj typy
+            List<TypRoweru> typy = typyIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_TYPY);
+            for (TypRoweru t : typy) serwisTypow.dodajTypRoweru(t);
 
             DefaultListModel<Rower> model = new DefaultListModel<>();
             for (Rower r : listaZRozszerzenia) model.addElement(r);
 
             JList<Rower> lista = new JList<>(model);
             lista.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
-                String txt = String.format("[%s] %s %s (%d\")\nOpis: %s",
+                String txt = String.format("[%s] %s %s (%d\")\nOpis: %s\nSN: %s",
                         value.getTyp().getNazwa(),
                         value.getMarka(),
                         value.getModel(),
                         value.getRozmiarKola(),
-                        value.getOpis());
+                        value.getOpis(),
+                        value.getNumerSeryjny());
                 JLabel label = new JLabel("<html>" + txt.replace("\n", "<br>") + "</html>");
                 if (isSelected) {
                     label.setBackground(list.getSelectionBackground());
@@ -66,9 +63,12 @@ public class RoweryGUI {
             JButton dodaj = new JButton("Dodaj rower");
             JButton usun = new JButton("Usuń rower");
             JButton odswiez = new JButton("Odśwież");
+            JButton typyButton = new JButton("Typy rowerów");
+
             przyciski.add(dodaj);
             przyciski.add(usun);
             przyciski.add(odswiez);
+            przyciski.add(typyButton);
             panel.add(przyciski, BorderLayout.SOUTH);
 
             dodaj.addActionListener(e -> {
@@ -76,23 +76,41 @@ public class RoweryGUI {
                 JTextField modelR = new JTextField();
                 JTextField rozmiar = new JTextField();
                 JTextField opis = new JTextField();
+                JTextField numerSeryjny = new JTextField();
                 JComboBox<TypRoweru> combo = new JComboBox<>(serwisTypow.pobierzWszystkieTypy().toArray(new TypRoweru[0]));
 
-                JPanel input = new JPanel(new GridLayout(5, 2));
+                JPanel input = new JPanel(new GridLayout(6, 2));
                 input.add(new JLabel("Marka:")); input.add(marka);
                 input.add(new JLabel("Model:")); input.add(modelR);
                 input.add(new JLabel("Rozmiar koła:")); input.add(rozmiar);
                 input.add(new JLabel("Opis:")); input.add(opis);
+                input.add(new JLabel("Numer seryjny:")); input.add(numerSeryjny);
                 input.add(new JLabel("Typ:")); input.add(combo);
 
                 int result = JOptionPane.showConfirmDialog(frame, input, "Nowy rower", JOptionPane.OK_CANCEL_OPTION);
                 if (result == JOptionPane.OK_OPTION) {
                     try {
                         int rRozmiar = Integer.parseInt(rozmiar.getText().trim());
-                        Rower nowy = new Rower((TypRoweru) combo.getSelectedItem(), marka.getText(), modelR.getText(), rRozmiar, opis.getText());
+                        String nrS = numerSeryjny.getText().trim();
+
+                        if (nrS.isEmpty() || nrS.length() < 5) {
+                            throw new IllegalArgumentException("Numer seryjny nie może być pusty ani krótszy niż 5 znaków.");
+                        }
+                        if (!nrS.matches("[A-Za-z0-9\\-]+")) {
+                            throw new IllegalArgumentException("Numer seryjny może zawierać tylko litery, cyfry i myślniki.");
+                        }
+
+                        Rower nowy = new Rower(
+                                (TypRoweru) combo.getSelectedItem(),
+                                marka.getText().trim(),
+                                modelR.getText().trim(),
+                                rRozmiar,
+                                opis.getText().trim(),
+                                nrS
+                        );
 
                         if (serwis.pobierzWszystkieRowery().contains(nowy)) {
-                            throw new IllegalArgumentException("Taki rower już istnieje w systemie.");
+                            throw new IllegalArgumentException("Rower o tym numerze seryjnym już istnieje.");
                         }
 
                         serwis.dodajRower(nowy);
@@ -135,6 +153,10 @@ public class RoweryGUI {
                     serwis.dodajRower(r);
                     model.addElement(r);
                 }
+            });
+
+            typyButton.addActionListener(e -> {
+                TypyRowerowGUI.otworz(frame, serwisTypow, null, typyIO);
             });
 
             frame.add(panel);
