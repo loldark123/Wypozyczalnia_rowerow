@@ -12,12 +12,14 @@ import java.util.List;
 public class PlikWypozyczenIO {
 
     // Zapisuje listę wypożyczeń do pliku binarnego
-    public void zapisz(List<Wypozyczenie> wypozyczenia, String sciezka) throws IOException {
+    public void zapisz(List<Wypozyczenie> wypozyczenia, String sciezka) {
         File plik = new File(sciezka);
         plik.getParentFile().mkdirs(); // Upewnij się, że katalog istnieje
 
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(plik))) {
             oos.writeObject(wypozyczenia);
+        } catch (IOException e) {
+            System.err.println("Błąd podczas zapisu wypożyczeń: " + e.getMessage());
         }
     }
 
