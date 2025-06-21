@@ -57,4 +57,14 @@ public class SerwisKlientow {
     public boolean usunKlienta(String numerDowodu) {
         return klienci.removeIf(k -> k.getNumerDowodu().equalsIgnoreCase(numerDowodu));
     }
+    
+    
+    public void wyczysc() {
+        klienci.clear();
+    }
+    
+    
+    
+    
+    
 }

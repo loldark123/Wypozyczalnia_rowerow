@@ -1,19 +1,23 @@
-package projekt_java.model;
+package data_model.model;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.time.LocalDate;
 
 /**
  * Klasa reprezentująca wypożyczenie roweru.
  */
-public class Wypozyczenie {
+public class Wypozyczenie implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Rower rower;
     private Klient klient;
-    private LocalDateTime dataOd;
-    private LocalDateTime dataDo;
-    private String status;
+    private LocalDate dataOd;
+    private LocalDate dataDo;
+    private StatusWypozyczenia status;
     private String uwagi;
 
-    public Wypozyczenie(Rower rower, Klient klient, LocalDateTime dataOd, LocalDateTime dataDo, String status, String uwagi) {
+    public Wypozyczenie(Rower rower, Klient klient, LocalDate dataOd, LocalDate dataDo,
+                        StatusWypozyczenia status, String uwagi) {
         this.rower = rower;
         this.klient = klient;
         this.dataOd = dataOd;
@@ -38,27 +42,27 @@ public class Wypozyczenie {
         this.klient = klient;
     }
 
-    public LocalDateTime getDataOd() {
+    public LocalDate getDataOd() {
         return dataOd;
     }
 
-    public void setDataOd(LocalDateTime dataOd) {
+    public void setDataOd(LocalDate dataOd) {
         this.dataOd = dataOd;
     }
 
-    public LocalDateTime getDataDo() {
+    public LocalDate getDataDo() {
         return dataDo;
     }
 
-    public void setDataDo(LocalDateTime dataDo) {
+    public void setDataDo(LocalDate dataDo) {
         this.dataDo = dataDo;
     }
 
-    public String getStatus() {
+    public StatusWypozyczenia getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StatusWypozyczenia status) {
         this.status = status;
     }
 
@@ -72,6 +76,9 @@ public class Wypozyczenie {
 
     @Override
     public String toString() {
-        return rower + " wypożyczony przez " + klient;
+        return klient.getImie() + " " + klient.getNazwisko() +
+                " wypożyczył: " + rower.getMarka() + " " + rower.getModel() +
+                " od " + dataOd + " do " + dataDo +
+                " [" + status + "]";
     }
 }

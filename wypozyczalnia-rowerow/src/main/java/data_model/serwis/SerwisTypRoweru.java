@@ -42,4 +42,9 @@ public class SerwisTypRoweru {
     public boolean usunTypPoNazwie(String nazwa) {
         return typyRowerow.removeIf(t -> t.getNazwa().equalsIgnoreCase(nazwa));
     }
+
+    // ✅ Nowa metoda: Usuń typ na podstawie obiektu
+    public boolean usunTyp(TypRoweru typ) {
+        return typyRowerow.remove(typ);
+    }
 }

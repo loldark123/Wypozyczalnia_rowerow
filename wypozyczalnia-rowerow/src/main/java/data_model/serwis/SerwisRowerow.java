@@ -44,6 +44,11 @@ public class SerwisRowerow {
         return false;
     }
 
+    // Usuń rower po obiekcie
+    public boolean usunRower(Rower rower) {
+        return rowery.remove(rower);
+    }
+
     // Usuń rower po marce i modelu
     public boolean usunRower(String marka, String model) {
         return rowery.removeIf(r -> r.getMarka().equalsIgnoreCase(marka) && r.getModel().equalsIgnoreCase(model));
@@ -54,5 +59,10 @@ public class SerwisRowerow {
         return rowery.stream()
                 .filter(r -> r.getTyp().equals(typ))
                 .collect(Collectors.toList());
+    }
+
+    // Wyczyść wszystkie dane
+    public void wyczysc() {
+        rowery.clear();
     }
 }
