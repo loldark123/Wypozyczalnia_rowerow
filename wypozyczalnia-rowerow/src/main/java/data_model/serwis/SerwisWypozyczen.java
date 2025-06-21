@@ -13,6 +13,9 @@ public class SerwisWypozyczen {
     private final List<Wypozyczenie> wypozyczenia = new ArrayList<>();
 
     public void dodajWypozyczenie(Wypozyczenie wypozyczenie) {
+    	
+    	
+    	
         wypozyczenia.add(wypozyczenie);
     }
 
@@ -30,6 +33,16 @@ public class SerwisWypozyczen {
         return wypozyczenia.stream()
                 .filter(w -> w.getRower().equals(rower) && w.getKlient().equals(klient))
                 .findFirst();
+    }
+
+    public Optional<Wypozyczenie> znajdzWypozyczeniePoId(String id) {
+        return wypozyczenia.stream()
+                .filter(w -> w.getId().equals(id))
+                .findFirst();
+    }
+
+    public boolean czyIdIstnieje(String id) {
+        return wypozyczenia.stream().anyMatch(w -> w.getId().equals(id));
     }
 
     public boolean aktualizujWypozyczenie(Rower rower, Klient klient, Wypozyczenie noweWypozyczenie) {
@@ -53,6 +66,11 @@ public class SerwisWypozyczen {
         return wypozyczenia.stream()
                 .filter(w -> w.getStatus() == StatusWypozyczenia.AKTYWNE && !w.getDataOd().isAfter(dataSymulacji))
                 .collect(Collectors.toList());
+    }
+
+    // NOWA METODA
+    public List<Wypozyczenie> pobierzAktywneWypozyczenia() {
+        return pobierzAktywneWypozyczenia(LocalDate.now());
     }
 
     public List<Wypozyczenie> pobierzWypozyczeniaSpoznione(LocalDate dataSymulacji) {
@@ -87,5 +105,14 @@ public class SerwisWypozyczen {
 
     public void zakonczWypozyczenie(Wypozyczenie wyp) {
         wyp.setStatus(StatusWypozyczenia.ZAKONCZONE);
+    }
+
+    public boolean zakonczWypozyczenie(Rower rower, Klient klient) {
+        Optional<Wypozyczenie> opt = znajdzWypozyczenie(rower, klient);
+        if (opt.isPresent() && opt.get().getStatus() == StatusWypozyczenia.AKTYWNE) {
+            opt.get().setStatus(StatusWypozyczenia.ZAKONCZONE);
+            return true;
+        }
+        return false;
     }
 }

@@ -10,6 +10,9 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class WypozyczeniaGUI {
     public static void main(String[] args) {
@@ -19,7 +22,7 @@ public class WypozyczeniaGUI {
             frame.setSize(700, 500);
             frame.setLocationRelativeTo(null);
 
-            JPanel panel = new JPanel(new GridLayout(11, 2, 5, 5));
+            JPanel panel = new JPanel(new GridLayout(13, 2, 5, 5));
 
             // Serwisy
             SerwisKlientow serwisKlientow = new SerwisKlientow();
@@ -47,6 +50,8 @@ public class WypozyczeniaGUI {
             JButton wypozyczBtn = new JButton("Wypożycz");
             JButton raportAktywneBtn = new JButton("Raport aktywnych");
             JButton raportSpoznioneBtn = new JButton("Raport spóźnionych");
+            JButton zwrocBtn = new JButton("Zwróć rower");
+            JButton pokazZwrotyBtn = new JButton("Zarządzaj wypożyczeniami");
 
             // Layout
             panel.add(new JLabel("Dzisiejsza data (rrrr-mm-dd):")); panel.add(dzisiajField);
@@ -55,8 +60,9 @@ public class WypozyczeniaGUI {
             panel.add(new JLabel("Data DO (rrrr-mm-dd):")); panel.add(dataDoField);
             panel.add(new JLabel("Uwagi:")); panel.add(new JScrollPane(uwagiArea));
             panel.add(sprawdzBtn); panel.add(rowerCombo);
-            panel.add(new JLabel()); panel.add(wypozyczBtn);
+            panel.add(wypozyczBtn); panel.add(zwrocBtn);
             panel.add(raportAktywneBtn); panel.add(raportSpoznioneBtn);
+            panel.add(pokazZwrotyBtn); panel.add(new JLabel());
 
             // Logika
             sprawdzBtn.addActionListener(e -> {
@@ -84,10 +90,41 @@ public class WypozyczeniaGUI {
                         return;
                     }
 
-                    Wypozyczenie wyp = new Wypozyczenie(rower, klient, dataOd, dataDo, StatusWypozyczenia.AKTYWNE, uwagi);
+                    String noweId;
+                    Random random = new Random();
+
+                    do {
+                        StringBuilder sb = new StringBuilder(10);
+                        for (int i = 0; i < 10; i++) {
+                            sb.append(random.nextInt(10)); // losuje cyfrę 0–9
+                        }
+                        noweId = sb.toString();
+                    } while (serwisWypozyczen.czyIdIstnieje(noweId));
+
+                    Wypozyczenie wyp = new Wypozyczenie(noweId, rower, klient, dataOd, dataDo, StatusWypozyczenia.AKTYWNE, uwagi);
                     serwisWypozyczen.dodajWypozyczenie(wyp);
                     wypozyczenieIO.zapisz(serwisWypozyczen.pobierzWszystkieWypozyczenia(), KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA);
                     JOptionPane.showMessageDialog(frame, "Wypożyczono rower!");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
+                }
+            });
+
+            zwrocBtn.addActionListener(e -> {
+                try {
+                    Klient klient = (Klient) klientCombo.getSelectedItem();
+                    Rower rower = (Rower) rowerCombo.getSelectedItem();
+                    if (klient == null || rower == null) {
+                        JOptionPane.showMessageDialog(frame, "Musisz wybrać klienta i rower.");
+                        return;
+                    }
+                    boolean ok = serwisWypozyczen.zakonczWypozyczenie(rower, klient);
+                    if (ok) {
+                        wypozyczenieIO.zapisz(serwisWypozyczen.pobierzWszystkieWypozyczenia(), KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA);
+                        JOptionPane.showMessageDialog(frame, "Zwrócono rower.");
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "Nie znaleziono aktywnego wypożyczenia.");
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
                 }
@@ -120,6 +157,8 @@ public class WypozyczeniaGUI {
                     JOptionPane.showMessageDialog(frame, "Błąd odczytu daty: " + ex.getMessage());
                 }
             });
+
+            pokazZwrotyBtn.addActionListener(e -> ZarzadzanieZwrotamiGUI.uruchom(frame, serwisWypozyczen, wypozyczenieIO));
 
             frame.add(panel);
             frame.setVisible(true);
