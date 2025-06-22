@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class WypozyczeniaGUI {
     public static void main(String[] args) {
@@ -32,12 +31,10 @@ public class WypozyczeniaGUI {
             PlikRowerowIO rowerIO = new PlikRowerowIO();
             PlikWypozyczenIO wypozyczenieIO = new PlikWypozyczenIO();
 
-            // Wczytywanie danych z plików
             for (Klient k : klientIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_KLIENCI)) serwisKlientow.dodajKlienta(k);
             for (Rower r : rowerIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_ROWERY)) serwisRowerow.dodajRower(r);
             for (Wypozyczenie w : wypozyczenieIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA)) serwisWypozyczen.dodajWypozyczenie(w);
 
-            // Komponenty
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             JTextField dzisiajField = new JTextField(LocalDate.now().format(formatter));
             JComboBox<Klient> klientCombo = new JComboBox<>(serwisKlientow.pobierzWszystkichKlientow().toArray(new Klient[0]));
@@ -53,7 +50,6 @@ public class WypozyczeniaGUI {
             JButton zwrocBtn = new JButton("Zwróć rower");
             JButton pokazZwrotyBtn = new JButton("Zarządzaj wypożyczeniami");
 
-            // Layout
             panel.add(new JLabel("Dzisiejsza data (rrrr-mm-dd):")); panel.add(dzisiajField);
             panel.add(new JLabel("Wybierz klienta:")); panel.add(klientCombo);
             panel.add(new JLabel("Data OD (rrrr-mm-dd):")); panel.add(dataOdField);
@@ -64,14 +60,30 @@ public class WypozyczeniaGUI {
             panel.add(raportAktywneBtn); panel.add(raportSpoznioneBtn);
             panel.add(pokazZwrotyBtn); panel.add(new JLabel());
 
-            // Logika
             sprawdzBtn.addActionListener(e -> {
                 try {
                     LocalDate dataOd = LocalDate.parse(dataOdField.getText().trim());
                     LocalDate dataDo = LocalDate.parse(dataDoField.getText().trim());
-                    List<Rower> dostepne = serwisWypozyczen.pobierzDostepneRoweryWZakresie(dataOd, dataDo, serwisRowerow.pobierzWszystkieRowery());
-                    rowerCombo.removeAllItems();
-                    for (Rower r : dostepne) rowerCombo.addItem(r);
+
+                    new SwingWorker<List<Rower>, Void>() {
+                        @Override
+                        protected List<Rower> doInBackground() throws Exception {
+                            return serwisWypozyczen.pobierzDostepneRoweryWZakresieAsync(
+                                    dataOd, dataDo, serwisRowerow.pobierzWszystkieRowery()).get();
+                        }
+
+                        @Override
+                        protected void done() {
+                            try {
+                                List<Rower> dostepne = get();
+                                rowerCombo.removeAllItems();
+                                for (Rower r : dostepne) rowerCombo.addItem(r);
+                            } catch (Exception ex) {
+                                JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
+                            }
+                        }
+                    }.execute();
+
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(frame, "Błąd formatu daty: " + ex.getMessage());
                 }
@@ -92,11 +104,10 @@ public class WypozyczeniaGUI {
 
                     String noweId;
                     Random random = new Random();
-
                     do {
                         StringBuilder sb = new StringBuilder(10);
                         for (int i = 0; i < 10; i++) {
-                            sb.append(random.nextInt(10)); // losuje cyfrę 0–9
+                            sb.append(random.nextInt(10));
                         }
                         noweId = sb.toString();
                     } while (serwisWypozyczen.czyIdIstnieje(noweId));
@@ -110,49 +121,31 @@ public class WypozyczeniaGUI {
                 }
             });
 
-            zwrocBtn.addActionListener(e -> {
-                try {
-                    Klient klient = (Klient) klientCombo.getSelectedItem();
-                    Rower rower = (Rower) rowerCombo.getSelectedItem();
-                    if (klient == null || rower == null) {
-                        JOptionPane.showMessageDialog(frame, "Musisz wybrać klienta i rower.");
-                        return;
-                    }
-                    boolean ok = serwisWypozyczen.zakonczWypozyczenie(rower, klient);
-                    if (ok) {
-                        wypozyczenieIO.zapisz(serwisWypozyczen.pobierzWszystkieWypozyczenia(), KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA);
-                        JOptionPane.showMessageDialog(frame, "Zwrócono rower.");
-                    } else {
-                        JOptionPane.showMessageDialog(frame, "Nie znaleziono aktywnego wypożyczenia.");
-                    }
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
-                }
-            });
-
             raportAktywneBtn.addActionListener(e -> {
                 try {
                     LocalDate symulowanaData = LocalDate.parse(dzisiajField.getText().trim());
-                    List<Wypozyczenie> aktywne = serwisWypozyczen.pobierzAktywneWypozyczenia(symulowanaData);
-                    StringBuilder raport = new StringBuilder("Aktywne wypożyczenia:\n\n");
-                    for (Wypozyczenie w : aktywne) {
-                        raport.append(w).append("\n");
-                    }
-                    JOptionPane.showMessageDialog(frame, raport.toString());
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(frame, "Błąd odczytu daty: " + ex.getMessage());
-                }
-            });
 
-            raportSpoznioneBtn.addActionListener(e -> {
-                try {
-                    LocalDate symulowanaData = LocalDate.parse(dzisiajField.getText().trim());
-                    List<Wypozyczenie> spoznione = serwisWypozyczen.pobierzWypozyczeniaSpoznione(symulowanaData);
-                    StringBuilder raport = new StringBuilder("Spóźnione wypożyczenia:\n\n");
-                    for (Wypozyczenie w : spoznione) {
-                        raport.append(w).append("\n");
-                    }
-                    JOptionPane.showMessageDialog(frame, raport.toString());
+                    new SwingWorker<List<Wypozyczenie>, Void>() {
+                        @Override
+                        protected List<Wypozyczenie> doInBackground() throws Exception {
+                            return serwisWypozyczen.pobierzAktywneWypozyczenia(symulowanaData);
+                        }
+
+                        @Override
+                        protected void done() {
+                            try {
+                                List<Wypozyczenie> aktywne = get();
+                                StringBuilder raport = new StringBuilder("Aktywne wypożyczenia:\n\n");
+                                for (Wypozyczenie w : aktywne) {
+                                    raport.append(w).append("\n");
+                                }
+                                JOptionPane.showMessageDialog(frame, raport.toString());
+                            } catch (Exception ex) {
+                                JOptionPane.showMessageDialog(frame, "Błąd odczytu wypożyczeń: " + ex.getMessage());
+                            }
+                        }
+                    }.execute();
+
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(frame, "Błąd odczytu daty: " + ex.getMessage());
                 }
