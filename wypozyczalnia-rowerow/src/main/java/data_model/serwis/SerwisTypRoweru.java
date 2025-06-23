@@ -10,8 +10,14 @@ public class SerwisTypRoweru {
     private final List<TypRoweru> typyRowerow = new ArrayList<>();
 
     // Utwórz nowy typ roweru
-    public void dodajTypRoweru(TypRoweru typ) {
+    public boolean dodajTypRoweru(TypRoweru typ) {
+        for (TypRoweru t : typyRowerow) {
+            if (t.getNazwa().equalsIgnoreCase(typ.getNazwa())) {
+                return false; // Już istnieje typ o tej nazwie
+            }
+        }
         typyRowerow.add(typ);
+        return true;
     }
 
     // Odczytaj wszystkie typy rowerów

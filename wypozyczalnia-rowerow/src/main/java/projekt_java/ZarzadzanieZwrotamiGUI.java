@@ -1,9 +1,9 @@
 package projekt_java;
 
-import data_model.model.Wypozyczenie;
-import data_model.model.StatusWypozyczenia;
+import data_model.model.*;
 import data_model.serwis.SerwisWypozyczen;
 import data_model.io.PlikWypozyczenIO;
+import data_model.io.PlikZwrotowIO;
 import konfiguracja.KonfiguracjaPlikow;
 
 import javax.swing.*;
@@ -39,14 +39,18 @@ public class ZarzadzanieZwrotamiGUI {
         panel.add(new JScrollPane(lista), BorderLayout.CENTER);
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        // Wczytaj aktywne wypożyczenia na start
-        List<Wypozyczenie> aktywne = serwisWypozyczen.pobierzAktywneWypozyczenia(LocalDate.now());
+        // Ustawienie daty z dzisiajField z GUI głównego
+        final LocalDate dzisiaj = LocalDate.now();
+
+        // Załaduj aktywne wypożyczenia
+        List<Wypozyczenie> aktywne = serwisWypozyczen.pobierzAktywneWypozyczenia(dzisiaj);
         model.clear();
         aktywne.forEach(model::addElement);
 
+        // Przycisk wyszukiwania
         searchBtn.addActionListener(e -> {
             String query = searchField.getText().trim().toLowerCase();
-            List<Wypozyczenie> wyniki = serwisWypozyczen.pobierzAktywneWypozyczenia(LocalDate.now()).stream()
+            List<Wypozyczenie> wyniki = serwisWypozyczen.pobierzAktywneWypozyczenia(dzisiaj).stream()
                     .filter(w -> w.getId().toLowerCase().contains(query)
                             || (w.getKlient().getImie() + " " + w.getKlient().getNazwisko()).toLowerCase().contains(query))
                     .collect(Collectors.toList());
@@ -54,16 +58,39 @@ public class ZarzadzanieZwrotamiGUI {
             wyniki.forEach(model::addElement);
         });
 
+        // Przycisk zwrotu
         zwrocBtn.addActionListener(e -> {
             List<Wypozyczenie> zaznaczone = lista.getSelectedValuesList();
-            for (Wypozyczenie w : zaznaczone) {
-                w.setStatus(StatusWypozyczenia.ZAKONCZONE);
+
+            if (zaznaczone.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Nie zaznaczono żadnych wypożyczeń.");
+                return;
             }
-            wypozyczenieIO.zapisz(serwisWypozyczen.pobierzWszystkieWypozyczenia(),
-                    KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA);
+
+            PlikZwrotowIO zwrotIO = new PlikZwrotowIO();
+
+            for (Wypozyczenie w : zaznaczone) {
+                String opis = JOptionPane.showInputDialog(dialog,
+                        "Podaj opis zwrotu dla wypożyczenia:\n" + w);
+
+                if (opis == null) {
+                    // użytkownik anulował – pomiń
+                    continue;
+                }
+
+                w.setStatus(StatusWypozyczenia.ZAKONCZONE);
+                w.setUwagi(opis);
+                zwrotIO.zapiszZwrot(w);
+            }
+
+            wypozyczenieIO.zapisz(
+                    serwisWypozyczen.pobierzWszystkieWypozyczenia(),
+                    KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA
+            );
+
             JOptionPane.showMessageDialog(dialog, "Zwrócono " + zaznaczone.size() + " wypożyczeń.");
             model.clear();
-            serwisWypozyczen.pobierzAktywneWypozyczenia(LocalDate.now()).forEach(model::addElement);
+            serwisWypozyczen.pobierzAktywneWypozyczenia(dzisiaj).forEach(model::addElement);
         });
 
         dialog.setContentPane(panel);

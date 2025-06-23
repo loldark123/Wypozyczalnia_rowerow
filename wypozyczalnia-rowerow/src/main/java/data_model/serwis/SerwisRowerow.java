@@ -12,9 +12,19 @@ import java.util.stream.*;
 public class SerwisRowerow {
     private final List<Rower> rowery = new ArrayList<>();
 
-    // Dodaj nowy rower
-    public void dodajRower(Rower rower) {
+    // Dodaj nowy rower (z zabezpieczeniem przed duplikatem numeru seryjnego)
+    public boolean dodajRower(Rower rower) {
+        if (czyNumerSeryjnyIstnieje(rower.getNumerSeryjny())) {
+            return false; // Nie dodajemy duplikatu
+        }
         rowery.add(rower);
+        return true;
+    }
+
+    // Sprawdź, czy numer seryjny już istnieje
+    public boolean czyNumerSeryjnyIstnieje(String numerSeryjny) {
+        return rowery.stream()
+                .anyMatch(r -> r.getNumerSeryjny().equalsIgnoreCase(numerSeryjny));
     }
 
     // Pobierz wszystkie rowery
@@ -39,6 +49,7 @@ public class SerwisRowerow {
             r.setModel(nowyRower.getModel());
             r.setRozmiarKola(nowyRower.getRozmiarKola());
             r.setOpis(nowyRower.getOpis());
+            r.setNumerSeryjny(nowyRower.getNumerSeryjny()); // Można zmienić numer, ale w realnym przypadku warto to ograniczyć
             return true;
         }
         return false;

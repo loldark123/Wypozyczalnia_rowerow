@@ -1,100 +1,163 @@
 package projekt_java;
 
+import data_model.io.PlikTypowRowerowIO;
+import data_model.model.Rower;
 import data_model.model.TypRoweru;
 import data_model.serwis.SerwisTypRoweru;
-import data_model.io.PlikTypowRowerowIO;
+import data_model.serwis.SerwisWypozyczen;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.util.List;
 
 public class TypyRowerowGUI {
-    public static void otworz(JFrame owner, SerwisTypRoweru serwis, JComboBox<TypRoweru> typCombo, PlikTypowRowerowIO io) {
-        JDialog dialog = new JDialog(owner, "Typy rowerów", true);
+    public static void otworz(JFrame parent, SerwisTypRoweru serwis, JComboBox<TypRoweru> comboBox, PlikTypowRowerowIO io, List<Rower> rowery, SerwisWypozyczen wypozyczeniaSerwis) {
+        JDialog dialog = new JDialog(parent, "Typy rowerów", true);
         dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(owner);
+        dialog.setLocationRelativeTo(parent);
 
         DefaultListModel<TypRoweru> model = new DefaultListModel<>();
-        for (TypRoweru t : serwis.pobierzWszystkieTypy()) {
-            model.addElement(t);
-        }
+        serwis.pobierzWszystkieTypy().forEach(model::addElement);
 
         JList<TypRoweru> lista = new JList<>(model);
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        lista.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
+            JLabel label = new JLabel("<html><b>" + value.getNazwa() + "</b> – <i>" + value.getOpis() + "</i></html>");
+            if (isSelected) {
+                label.setBackground(list.getSelectionBackground());
+                label.setForeground(list.getSelectionForeground());
+            }
+            label.setOpaque(true);
+            return label;
+        });
+
         JScrollPane scrollPane = new JScrollPane(lista);
 
         JTextField nazwaField = new JTextField();
         JTextField opisField = new JTextField();
-        JButton dodaj = new JButton("Dodaj typ");
-        JButton usun = new JButton("Usuń zaznaczony");
+        JButton dodajButton = new JButton("Dodaj typ");
+        JButton usunButton = new JButton("Usuń zaznaczony");
+        JButton edytujButton = new JButton("Edytuj zaznaczony");
 
-        dodaj.addActionListener(e -> {
+        JPanel dolPanel = new JPanel(new GridLayout(4, 2));
+        dolPanel.add(new JLabel("Nazwa:"));
+        dolPanel.add(nazwaField);
+        dolPanel.add(new JLabel("Opis:"));
+        dolPanel.add(opisField);
+        dolPanel.add(dodajButton);
+        dolPanel.add(usunButton);
+        dolPanel.add(edytujButton);
+
+        dodajButton.addActionListener(e -> {
             String nazwa = nazwaField.getText().trim();
             String opis = opisField.getText().trim();
+
             if (nazwa.isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "Nazwa nie może być pusta.");
                 return;
             }
-            TypRoweru nowy = new TypRoweru(nazwa, opis);
-            if (serwis.pobierzWszystkieTypy().contains(nowy)) {
-                JOptionPane.showMessageDialog(dialog, "Taki typ już istnieje.");
+
+            if (serwis.znajdzTypPoNazwie(nazwa).isPresent()) {
+                JOptionPane.showMessageDialog(dialog, "Typ o tej nazwie już istnieje.");
                 return;
             }
+
+            TypRoweru nowy = new TypRoweru(nazwa, opis);
             serwis.dodajTypRoweru(nowy);
             model.addElement(nowy);
+            if (comboBox != null) comboBox.addItem(nowy);
+
             try {
                 io.zapisz(serwis.pobierzWszystkieTypy(), konfiguracja.KonfiguracjaPlikow.SCIEZKA_TYPY);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "Błąd zapisu: " + ex.getMessage());
-            }
-            if (typCombo != null) {
-                typCombo.removeAllItems();
-                for (TypRoweru t : serwis.pobierzWszystkieTypy()) typCombo.addItem(t);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(dialog, "Błąd zapisu pliku: " + ex.getMessage());
             }
         });
 
-        usun.addActionListener((ActionEvent e) -> {
+        usunButton.addActionListener(e -> {
             TypRoweru zaznaczony = lista.getSelectedValue();
             if (zaznaczony == null) {
-                JOptionPane.showMessageDialog(dialog, "Zaznacz typ do usunięcia.");
+                JOptionPane.showMessageDialog(dialog, "Wybierz typ do usunięcia.");
                 return;
             }
-            int confirm = JOptionPane.showConfirmDialog(dialog, "Na pewno usunąć typ: " + zaznaczony.getNazwa() + "?", "Potwierdzenie", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                serwis.usunTyp(zaznaczony);
-                model.removeElement(zaznaczony);
-                try {
-                    io.zapisz(serwis.pobierzWszystkieTypy(), konfiguracja.KonfiguracjaPlikow.SCIEZKA_TYPY);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(dialog, "Błąd zapisu: " + ex.getMessage());
-                }
-                if (typCombo != null) {
-                    typCombo.removeAllItems();
-                    for (TypRoweru t : serwis.pobierzWszystkieTypy()) typCombo.addItem(t);
+
+            // Pobierz aktualny typ z serwisu (nie obiekt z listy GUI!)
+            TypRoweru typZRozpoznania = serwis.znajdzTypPoNazwie(zaznaczony.getNazwa()).orElse(null);
+            if (typZRozpoznania == null) {
+                JOptionPane.showMessageDialog(dialog, "Typ nie istnieje w systemie.");
+                return;
+            }
+
+            if (wypozyczeniaSerwis != null && wypozyczeniaSerwis.czyTypJestWUzyciu(typZRozpoznania, rowery)) {
+                JOptionPane.showMessageDialog(dialog, "Nie można usunąć typu, który jest używany przez rowery.");
+                return;
+            }
+
+            int conf = JOptionPane.showConfirmDialog(dialog, "Na pewno usunąć typ: " + zaznaczony.getNazwa() + "?", "Potwierdzenie", JOptionPane.YES_NO_OPTION);
+            if (conf == JOptionPane.YES_OPTION) {
+                boolean ok = serwis.usunTyp(typZRozpoznania);
+                if (ok) {
+                    model.removeElement(zaznaczony);
+                    if (comboBox != null) comboBox.removeItem(zaznaczony);
+                    try {
+                        io.zapisz(serwis.pobierzWszystkieTypy(), konfiguracja.KonfiguracjaPlikow.SCIEZKA_TYPY);
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(dialog, "Błąd zapisu pliku: " + ex.getMessage());
+                    }
                 }
             }
         });
 
-        JPanel dolnyPanel = new JPanel();
-        dolnyPanel.setLayout(new BoxLayout(dolnyPanel, BoxLayout.Y_AXIS));
+        edytujButton.addActionListener(e -> {
+            TypRoweru zaznaczony = lista.getSelectedValue();
+            if (zaznaczony == null) {
+                JOptionPane.showMessageDialog(dialog, "Wybierz typ do edycji.");
+                return;
+            }
 
-        JPanel formPanel = new JPanel(new GridLayout(2, 2));
-        formPanel.add(new JLabel("Nazwa:"));
-        formPanel.add(nazwaField);
-        formPanel.add(new JLabel("Opis:"));
-        formPanel.add(opisField);
+            String nowaNazwa = nazwaField.getText().trim();
+            String nowyOpis = opisField.getText().trim();
 
-        JPanel przyciskiPanel = new JPanel();
-        przyciskiPanel.add(dodaj);
-        przyciskiPanel.add(usun);
+            if (nowaNazwa.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Nazwa nie może być pusta.");
+                return;
+            }
 
-        dolnyPanel.add(formPanel);
-        dolnyPanel.add(przyciskiPanel);
+            if (!zaznaczony.getNazwa().equalsIgnoreCase(nowaNazwa) &&
+                    serwis.znajdzTypPoNazwie(nowaNazwa).isPresent()) {
+                JOptionPane.showMessageDialog(dialog, "Typ o tej nazwie już istnieje.");
+                return;
+            }
 
-        dialog.setLayout(new BorderLayout());
+            TypRoweru nowyTyp = new TypRoweru(nowaNazwa, nowyOpis);
+            boolean ok = serwis.aktualizujTypRoweru(zaznaczony.getNazwa(), nowyTyp);
+            if (ok) {
+                model.setElementAt(nowyTyp, lista.getSelectedIndex());
+                if (comboBox != null) {
+                    comboBox.removeItem(zaznaczony);
+                    comboBox.addItem(nowyTyp);
+                }
+                try {
+                    io.zapisz(serwis.pobierzWszystkieTypy(), konfiguracja.KonfiguracjaPlikow.SCIEZKA_TYPY);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(dialog, "Błąd zapisu pliku: " + ex.getMessage());
+                }
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Nie udało się zaktualizować typu.");
+            }
+        });
+
+        lista.addListSelectionListener(e -> {
+            TypRoweru zaznaczony = lista.getSelectedValue();
+            if (zaznaczony != null) {
+                nazwaField.setText(zaznaczony.getNazwa());
+                opisField.setText(zaznaczony.getOpis());
+            }
+        });
+
         dialog.add(scrollPane, BorderLayout.CENTER);
-        dialog.add(dolnyPanel, BorderLayout.SOUTH);
-
+        dialog.add(dolPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
 }
