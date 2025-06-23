@@ -4,9 +4,12 @@ import data_model.model.Wypozyczenie;
 import data_model.model.Rower;
 import data_model.model.Klient;
 import data_model.model.StatusWypozyczenia;
+import util.ThreadPoolManager;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class SerwisWypozyczen {
@@ -18,7 +21,21 @@ public class SerwisWypozyczen {
     	
         wypozyczenia.add(wypozyczenie);
     }
+    public Future<List<Rower>> pobierzDostepneRoweryAsync(List<Rower> wszystkieRowery, LocalDate dataSymulacji) {
+        return ThreadPoolManager.getExecutor().submit(() -> pobierzDostepneRowery(wszystkieRowery, dataSymulacji));
+    }
 
+    public Future<List<Rower>> pobierzDostepneRoweryWZakresieAsync(LocalDate dataOd, LocalDate dataDo, List<Rower> wszystkieRowery) {
+        return ThreadPoolManager.getExecutor().submit(() -> pobierzDostepneRoweryWZakresie(dataOd, dataDo, wszystkieRowery));
+    }
+
+    public Future<List<Wypozyczenie>> pobierzAktywneWypozyczeniaAsync() {
+        return ThreadPoolManager.getExecutor().submit(() -> pobierzAktywneWypozyczenia());
+    }
+
+    public Future<List<Wypozyczenie>> znajdzWypozyczeniaPoKliencieAsync(Klient klient) {
+        return ThreadPoolManager.getExecutor().submit(() -> znajdzWypozyczeniaPoKliencie(klient));
+    }
     public List<Wypozyczenie> pobierzWszystkieWypozyczenia() {
         return new ArrayList<>(wypozyczenia);
     }

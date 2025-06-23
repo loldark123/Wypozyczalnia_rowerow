@@ -1,10 +1,16 @@
 package projekt_java;
 
+import util.ThreadPoolManager;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class MasterGUI {
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Zamykanie ExecutorService...");
+            ThreadPoolManager.shutdown();
+        }));
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("System wypożyczalni rowerów");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
