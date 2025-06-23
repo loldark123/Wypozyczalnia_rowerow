@@ -1,8 +1,11 @@
 package projekt_java;
 
-import data_model.model.Klient;
 import data_model.io.PlikKlientowIO;
+import data_model.io.PlikWypozyczenIO;
+import data_model.model.Klient;
+import data_model.model.Wypozyczenie;
 import data_model.serwis.SerwisKlientow;
+import data_model.serwis.SerwisWypozyczen;
 import konfiguracja.KonfiguracjaPlikow;
 
 import javax.swing.*;
@@ -11,39 +14,26 @@ import java.io.IOException;
 import java.util.List;
 
 public class KlienciGUI {
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Lista klientów");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setSize(500, 400);
             frame.setLocationRelativeTo(null);
 
             JPanel panel = new JPanel(new BorderLayout());
 
-            // Wczytaj dane z pliku
             PlikKlientowIO io = new PlikKlientowIO();
-            
             SerwisKlientow serwis = new SerwisKlientow();
-        
-            
+
             List<Klient> klienci = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_KLIENCI);
-            
-            for (Klient k : klienci) {
-                serwis.dodajKlienta(k);
-            }
-            
+            klienci.forEach(serwis::dodajKlienta);
 
-            // Model listy klientów (zamiast String, trzymamy obiekty Klient)
             DefaultListModel<Klient> listModel = new DefaultListModel<>();
-            for (Klient k : klienci) {
-                listModel.addElement(k);
-            }
+            klienci.forEach(listModel::addElement);
 
-            // Lista klientów
             JList<Klient> lista = new JList<>(listModel);
-
-            // Pokazuj tylko imię i nazwisko w liście
+            lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             lista.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
                 JLabel label = new JLabel(value.getImie() + " " + value.getNazwisko());
                 if (isSelected) {
@@ -54,7 +44,7 @@ public class KlienciGUI {
                 return label;
             });
 
-            // Wyświetl szczegóły klienta po kliknięciu
+            // Pokazuj szczegóły klienta po kliknięciu
             lista.addListSelectionListener(e -> {
                 if (!e.getValueIsAdjusting()) {
                     Klient wybrany = lista.getSelectedValue();
@@ -73,45 +63,109 @@ public class KlienciGUI {
             JScrollPane scrollPane = new JScrollPane(lista);
             panel.add(scrollPane, BorderLayout.CENTER);
 
-            // Panel z przyciskami
             JPanel przyciski = new JPanel();
 
             JButton dodajBtn = new JButton("Dodaj nowego klienta");
-            przyciski.add(dodajBtn);
-
-            JButton odswiezBtn = new JButton("Odśwież listę");
-            przyciski.add(odswiezBtn);
-            
+            JButton edytujBtn = new JButton("Edytuj klienta");
             JButton usunBtn = new JButton("Usuń klienta");
-            przyciski.add(usunBtn);
             usunBtn.setBackground(Color.RED);
             usunBtn.setForeground(Color.WHITE);
 
+            przyciski.add(dodajBtn);
+            przyciski.add(edytujBtn);
+            przyciski.add(usunBtn);
+
             panel.add(przyciski, BorderLayout.SOUTH);
 
-            // Działanie: otwórz NowyKlientGUI
+            // Dodawanie klienta
             dodajBtn.addActionListener(e -> {
-                NowyKlientGUI.main(null);
+                JTextField imieField = new JTextField();
+                JTextField nazwiskoField = new JTextField();
+                JTextField dowodField = new JTextField();
+                JTextField opisField = new JTextField();
+
+                JPanel addPanel = new JPanel(new GridLayout(4, 2));
+                addPanel.add(new JLabel("Imię:")); addPanel.add(imieField);
+                addPanel.add(new JLabel("Nazwisko:")); addPanel.add(nazwiskoField);
+                addPanel.add(new JLabel("Numer dowodu:")); addPanel.add(dowodField);
+                addPanel.add(new JLabel("Opis:")); addPanel.add(opisField);
+
+                int result = JOptionPane.showConfirmDialog(frame, addPanel, "Nowy klient", JOptionPane.OK_CANCEL_OPTION);
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        Klient nowy = new Klient(
+                                imieField.getText().trim(),
+                                nazwiskoField.getText().trim(),
+                                dowodField.getText().trim(),
+                                opisField.getText().trim()
+                        );
+                        serwis.dodajKlienta(nowy);
+                        io.zapisz(serwis.pobierzWszystkichKlientow(), KonfiguracjaPlikow.SCIEZKA_KLIENCI);
+                        listModel.addElement(nowy);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
+                    }
+                }
             });
 
-            // Działanie: odśwież listę po ponownym wczytaniu pliku
-            odswiezBtn.addActionListener(e -> {
-                List<Klient> nowaLista = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_KLIENCI);
-                serwis.wyczysc(); // dodaj taką metodę
-                for (Klient k : nowaLista) {
-                    serwis.dodajKlienta(k);
+            // Edycja klienta
+            edytujBtn.addActionListener(e -> {
+                Klient wybrany = lista.getSelectedValue();
+                if (wybrany == null) {
+                    JOptionPane.showMessageDialog(frame, "Wybierz klienta do edycji.");
+                    return;
                 }
-                listModel.clear();
-                for (Klient k : nowaLista) {
-                    listModel.addElement(k);
+
+                JTextField imieField = new JTextField(wybrany.getImie());
+                JTextField nazwiskoField = new JTextField(wybrany.getNazwisko());
+                JTextField dowodField = new JTextField(wybrany.getNumerDowodu());
+                JTextField opisField = new JTextField(wybrany.getOpis());
+
+                JPanel editPanel = new JPanel(new GridLayout(4, 2));
+                editPanel.add(new JLabel("Imię:")); editPanel.add(imieField);
+                editPanel.add(new JLabel("Nazwisko:")); editPanel.add(nazwiskoField);
+                editPanel.add(new JLabel("Numer dowodu:")); editPanel.add(dowodField);
+                editPanel.add(new JLabel("Opis:")); editPanel.add(opisField);
+
+                int wynik = JOptionPane.showConfirmDialog(frame, editPanel, "Edytuj klienta", JOptionPane.OK_CANCEL_OPTION);
+                if (wynik == JOptionPane.OK_OPTION) {
+                    Klient nowy = new Klient(
+                            imieField.getText().trim(),
+                            nazwiskoField.getText().trim(),
+                            dowodField.getText().trim(),
+                            opisField.getText().trim()
+                    );
+
+                    boolean ok = serwis.aktualizujKlienta(wybrany.getNumerDowodu(), nowy);
+                    if (ok) {
+                        try {
+                            io.zapisz(serwis.pobierzWszystkichKlientow(), KonfiguracjaPlikow.SCIEZKA_KLIENCI);
+                            listModel.setElementAt(nowy, lista.getSelectedIndex());
+                            JOptionPane.showMessageDialog(frame, "Zaktualizowano dane klienta.");
+                        } catch (IOException ex) {
+                            JOptionPane.showMessageDialog(frame, "Błąd zapisu: " + ex.getMessage());
+                        }
+                    }
                 }
-               
             });
-            
+
+            // Usuwanie klienta
             usunBtn.addActionListener(e -> {
                 Klient wybrany = lista.getSelectedValue();
                 if (wybrany == null) {
                     JOptionPane.showMessageDialog(frame, "Wybierz klienta do usunięcia.");
+                    return;
+                }
+
+                PlikWypozyczenIO wypIO = new PlikWypozyczenIO();
+                SerwisWypozyczen serwisWyp = new SerwisWypozyczen();
+                List<Wypozyczenie> wypList = wypIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA);
+                wypList.forEach(serwisWyp::dodajWypozyczenie);
+
+                boolean aktywne = serwisWyp.pobierzAktywneWypozyczenia().stream()
+                        .anyMatch(w -> w.getKlient().equals(wybrany));
+                if (aktywne) {
+                    JOptionPane.showMessageDialog(frame, "Nie można usunąć klienta z aktywnymi wypożyczeniami.");
                     return;
                 }
 
@@ -123,9 +177,7 @@ public class KlienciGUI {
                 );
 
                 if (potwierdzenie == JOptionPane.YES_OPTION) {
-                    // Usuń klienta
                     boolean usunieto = serwis.usunKlienta(wybrany.getNumerDowodu());
-
                     if (usunieto) {
                         try {
                             io.zapisz(serwis.pobierzWszystkichKlientow(), KonfiguracjaPlikow.SCIEZKA_KLIENCI);
@@ -139,7 +191,6 @@ public class KlienciGUI {
                     }
                 }
             });
-
 
             frame.add(panel);
             frame.setVisible(true);

@@ -4,8 +4,10 @@ import data_model.model.Rower;
 import data_model.model.TypRoweru;
 import data_model.serwis.SerwisRowerow;
 import data_model.serwis.SerwisTypRoweru;
+import data_model.serwis.SerwisWypozyczen;
 import data_model.io.PlikRowerowIO;
 import data_model.io.PlikTypowRowerowIO;
+import data_model.io.PlikWypozyczenIO;
 import konfiguracja.KonfiguracjaPlikow;
 
 import javax.swing.*;
@@ -17,23 +19,28 @@ public class RoweryGUI {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Zarządzanie rowerami");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setSize(600, 400);
             frame.setLocationRelativeTo(null);
 
             JPanel panel = new JPanel(new BorderLayout());
             SerwisRowerow serwis = new SerwisRowerow();
             SerwisTypRoweru serwisTypow = new SerwisTypRoweru();
+            SerwisWypozyczen serwisWypozyczen = new SerwisWypozyczen();
+
             PlikRowerowIO io = new PlikRowerowIO();
             PlikTypowRowerowIO typyIO = new PlikTypowRowerowIO();
+            PlikWypozyczenIO wypozyczeniaIO = new PlikWypozyczenIO();
 
-            // Wczytaj rowery
+            // Wczytaj dane
             List<Rower> listaZRozszerzenia = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_ROWERY);
             for (Rower r : listaZRozszerzenia) serwis.dodajRower(r);
 
-            // Wczytaj typy
             List<TypRoweru> typy = typyIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_TYPY);
             for (TypRoweru t : typy) serwisTypow.dodajTypRoweru(t);
+
+            List<data_model.model.Wypozyczenie> wypozyczenia = wypozyczeniaIO.wczytaj(KonfiguracjaPlikow.SCIEZKA_WYPOZYCZENIA);
+            for (data_model.model.Wypozyczenie w : wypozyczenia) serwisWypozyczen.dodajWypozyczenie(w);
 
             DefaultListModel<Rower> model = new DefaultListModel<>();
             for (Rower r : listaZRozszerzenia) model.addElement(r);
@@ -41,7 +48,7 @@ public class RoweryGUI {
             JList<Rower> lista = new JList<>(model);
             lista.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
                 String txt = String.format("[%s] %s %s (%d\")\nOpis: %s\nSN: %s",
-                        value.getTyp().getNazwa(),
+                        value.getTyp() != null ? value.getTyp().getNazwa() : "Brak typu",
                         value.getMarka(),
                         value.getModel(),
                         value.getRozmiarKola(),
@@ -62,16 +69,19 @@ public class RoweryGUI {
             JPanel przyciski = new JPanel();
             JButton dodaj = new JButton("Dodaj rower");
             JButton usun = new JButton("Usuń rower");
-            JButton odswiez = new JButton("Odśwież");
             JButton typyButton = new JButton("Typy rowerów");
 
             przyciski.add(dodaj);
             przyciski.add(usun);
-            przyciski.add(odswiez);
             przyciski.add(typyButton);
             panel.add(przyciski, BorderLayout.SOUTH);
 
             dodaj.addActionListener(e -> {
+                if (serwisTypow.pobierzWszystkieTypy().isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Brak dostępnych typów rowerów. Najpierw dodaj typ.");
+                    return;
+                }
+
                 JTextField marka = new JTextField();
                 JTextField modelR = new JTextField();
                 JTextField rozmiar = new JTextField();
@@ -92,6 +102,11 @@ public class RoweryGUI {
                     try {
                         int rRozmiar = Integer.parseInt(rozmiar.getText().trim());
                         String nrS = numerSeryjny.getText().trim();
+                        TypRoweru wybranyTyp = (TypRoweru) combo.getSelectedItem();
+
+                        if (wybranyTyp == null) {
+                            throw new IllegalArgumentException("Musisz wybrać typ roweru.");
+                        }
 
                         if (nrS.isEmpty() || nrS.length() < 5) {
                             throw new IllegalArgumentException("Numer seryjny nie może być pusty ani krótszy niż 5 znaków.");
@@ -101,7 +116,7 @@ public class RoweryGUI {
                         }
 
                         Rower nowy = new Rower(
-                                (TypRoweru) combo.getSelectedItem(),
+                                wybranyTyp,
                                 marka.getText().trim(),
                                 modelR.getText().trim(),
                                 rRozmiar,
@@ -128,6 +143,13 @@ public class RoweryGUI {
                     JOptionPane.showMessageDialog(frame, "Wybierz rower do usunięcia.");
                     return;
                 }
+
+                boolean aktywne = serwisWypozyczen.czyRowerJestWypozyczony(r);
+                if (aktywne) {
+                    JOptionPane.showMessageDialog(frame, "Nie można usunąć roweru, który jest aktualnie wypożyczony.");
+                    return;
+                }
+
                 int conf = JOptionPane.showConfirmDialog(frame, "Usunąć rower: " + r + "?", "Potwierdź", JOptionPane.YES_NO_OPTION);
                 if (conf == JOptionPane.YES_OPTION) {
                     boolean ok = serwis.usunRower(r);
@@ -145,18 +167,8 @@ public class RoweryGUI {
                 }
             });
 
-            odswiez.addActionListener(e -> {
-                List<Rower> nowaLista = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_ROWERY);
-                serwis.wyczysc();
-                model.clear();
-                for (Rower r : nowaLista) {
-                    serwis.dodajRower(r);
-                    model.addElement(r);
-                }
-            });
-
             typyButton.addActionListener(e -> {
-                TypyRowerowGUI.otworz(frame, serwisTypow, null, typyIO);
+                TypyRowerowGUI.otworz(frame, serwisTypow, null, typyIO, serwis.pobierzWszystkieRowery(), serwisWypozyczen);
             });
 
             frame.add(panel);

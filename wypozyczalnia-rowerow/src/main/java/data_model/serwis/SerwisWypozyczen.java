@@ -4,11 +4,11 @@ import data_model.model.Wypozyczenie;
 import data_model.model.Rower;
 import data_model.model.Klient;
 import data_model.model.StatusWypozyczenia;
+import data_model.model.TypRoweru;
 import util.ThreadPoolManager;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -16,11 +16,9 @@ public class SerwisWypozyczen {
     private final List<Wypozyczenie> wypozyczenia = new ArrayList<>();
 
     public void dodajWypozyczenie(Wypozyczenie wypozyczenie) {
-    	
-    	
-    	
         wypozyczenia.add(wypozyczenie);
     }
+
     public Future<List<Rower>> pobierzDostepneRoweryAsync(List<Rower> wszystkieRowery, LocalDate dataSymulacji) {
         return ThreadPoolManager.getExecutor().submit(() -> pobierzDostepneRowery(wszystkieRowery, dataSymulacji));
     }
@@ -36,6 +34,7 @@ public class SerwisWypozyczen {
     public Future<List<Wypozyczenie>> znajdzWypozyczeniaPoKliencieAsync(Klient klient) {
         return ThreadPoolManager.getExecutor().submit(() -> znajdzWypozyczeniaPoKliencie(klient));
     }
+
     public List<Wypozyczenie> pobierzWszystkieWypozyczenia() {
         return new ArrayList<>(wypozyczenia);
     }
@@ -85,7 +84,6 @@ public class SerwisWypozyczen {
                 .collect(Collectors.toList());
     }
 
-    // NOWA METODA
     public List<Wypozyczenie> pobierzAktywneWypozyczenia() {
         return pobierzAktywneWypozyczenia(LocalDate.now());
     }
@@ -131,5 +129,19 @@ public class SerwisWypozyczen {
             return true;
         }
         return false;
+    }
+
+    public boolean czyRowerJestWypozyczony(Rower rower) {
+        return wypozyczenia.stream()
+                .anyMatch(w -> w.getRower().equals(rower) && w.getStatus() == StatusWypozyczenia.AKTYWNE);
+    }
+
+    public boolean czyTypJestWUzyciu(TypRoweru typ, List<Rower> rowery) {
+        return rowery.stream().anyMatch(r -> r.getTyp().equals(typ));
+    }
+
+    // ✅ NOWA METODA – Walidacja zakresu dat wypożyczenia
+    public boolean czyZakresDatJestPoprawny(LocalDate dzisiaj, LocalDate od, LocalDate do_) {
+        return !od.isBefore(dzisiaj) && !do_.isBefore(od);
     }
 }

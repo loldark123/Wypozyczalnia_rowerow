@@ -30,7 +30,7 @@ class SerwisKlientowTest {
         Klient klient = new Klient("Cruella", "Demon", "XYZ789456", "Nowa");
         serwis.dodajKlienta(klient);
 
-        Klient duplikat = new Klient("Napoleon", "Bonaparte", "xyz789456", "Ktoś inny");
+        Klient duplikat = new Klient("Napoleon", "Bonaparte", "XYZ789456", "Ktoś inny");
 
         assertThrows(IllegalArgumentException.class, () -> serwis.dodajKlienta(duplikat));
     }
