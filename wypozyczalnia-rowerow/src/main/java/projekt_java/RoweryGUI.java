@@ -32,7 +32,6 @@ public class RoweryGUI {
             PlikTypowRowerowIO typyIO = new PlikTypowRowerowIO();
             PlikWypozyczenIO wypozyczeniaIO = new PlikWypozyczenIO();
 
-            // Wczytaj dane
             List<Rower> listaZRozszerzenia = io.wczytaj(KonfiguracjaPlikow.SCIEZKA_ROWERY);
             for (Rower r : listaZRozszerzenia) serwis.dodajRower(r);
 
@@ -68,10 +67,12 @@ public class RoweryGUI {
 
             JPanel przyciski = new JPanel();
             JButton dodaj = new JButton("Dodaj rower");
+            JButton edytuj = new JButton("Edytuj rower");
             JButton usun = new JButton("Usuń rower");
             JButton typyButton = new JButton("Typy rowerów");
 
             przyciski.add(dodaj);
+            przyciski.add(edytuj);
             przyciski.add(usun);
             przyciski.add(typyButton);
             panel.add(przyciski, BorderLayout.SOUTH);
@@ -104,35 +105,66 @@ public class RoweryGUI {
                         String nrS = numerSeryjny.getText().trim();
                         TypRoweru wybranyTyp = (TypRoweru) combo.getSelectedItem();
 
-                        if (wybranyTyp == null) {
-                            throw new IllegalArgumentException("Musisz wybrać typ roweru.");
-                        }
-
-                        if (nrS.isEmpty() || nrS.length() < 5) {
+                        if (wybranyTyp == null) throw new IllegalArgumentException("Musisz wybrać typ roweru.");
+                        if (nrS.isEmpty() || nrS.length() < 5)
                             throw new IllegalArgumentException("Numer seryjny nie może być pusty ani krótszy niż 5 znaków.");
-                        }
-                        if (!nrS.matches("[A-Za-z0-9\\-]+")) {
+                        if (!nrS.matches("[A-Za-z0-9\\-]+"))
                             throw new IllegalArgumentException("Numer seryjny może zawierać tylko litery, cyfry i myślniki.");
-                        }
 
-                        Rower nowy = new Rower(
-                                wybranyTyp,
-                                marka.getText().trim(),
-                                modelR.getText().trim(),
-                                rRozmiar,
-                                opis.getText().trim(),
-                                nrS
-                        );
+                        Rower nowy = new Rower(wybranyTyp, marka.getText().trim(), modelR.getText().trim(), rRozmiar, opis.getText().trim(), nrS);
 
-                        if (serwis.pobierzWszystkieRowery().contains(nowy)) {
+                        if (serwis.pobierzWszystkieRowery().contains(nowy))
                             throw new IllegalArgumentException("Rower o tym numerze seryjnym już istnieje.");
-                        }
 
                         serwis.dodajRower(nowy);
                         io.zapisz(serwis.pobierzWszystkieRowery(), KonfiguracjaPlikow.SCIEZKA_ROWERY);
                         model.addElement(nowy);
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
+                    }
+                }
+            });
+
+            edytuj.addActionListener(e -> {
+                Rower wybrany = lista.getSelectedValue();
+                if (wybrany == null) {
+                    JOptionPane.showMessageDialog(frame, "Wybierz rower do edycji.");
+                    return;
+                }
+
+                JTextField marka = new JTextField(wybrany.getMarka());
+                JTextField modelR = new JTextField(wybrany.getModel());
+                JTextField rozmiar = new JTextField(String.valueOf(wybrany.getRozmiarKola()));
+                JTextField opis = new JTextField(wybrany.getOpis());
+                JTextField numerSeryjny = new JTextField(wybrany.getNumerSeryjny());
+                numerSeryjny.setEditable(false); // ⛔ Zablokowana edycja numeru seryjnego
+                JComboBox<TypRoweru> combo = new JComboBox<>(serwisTypow.pobierzWszystkieTypy().toArray(new TypRoweru[0]));
+                combo.setSelectedItem(wybrany.getTyp());
+
+                JPanel input = new JPanel(new GridLayout(6, 2));
+                input.add(new JLabel("Marka:")); input.add(marka);
+                input.add(new JLabel("Model:")); input.add(modelR);
+                input.add(new JLabel("Rozmiar koła:")); input.add(rozmiar);
+                input.add(new JLabel("Opis:")); input.add(opis);
+                input.add(new JLabel("Numer seryjny:")); input.add(numerSeryjny);
+                input.add(new JLabel("Typ:")); input.add(combo);
+
+                int result = JOptionPane.showConfirmDialog(frame, input, "Edytuj rower", JOptionPane.OK_CANCEL_OPTION);
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        int rRozmiar = Integer.parseInt(rozmiar.getText().trim());
+                        TypRoweru nowyTyp = (TypRoweru) combo.getSelectedItem();
+
+                        Rower nowyRower = new Rower(nowyTyp, marka.getText().trim(), modelR.getText().trim(), rRozmiar,
+                                opis.getText().trim(), wybrany.getNumerSeryjny());
+
+                        serwis.usunRower(wybrany);
+                        model.removeElement(wybrany);
+                        serwis.dodajRower(nowyRower);
+                        model.addElement(nowyRower);
+                        io.zapisz(serwis.pobierzWszystkieRowery(), KonfiguracjaPlikow.SCIEZKA_ROWERY);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(frame, "Błąd podczas edycji: " + ex.getMessage());
                     }
                 }
             });
