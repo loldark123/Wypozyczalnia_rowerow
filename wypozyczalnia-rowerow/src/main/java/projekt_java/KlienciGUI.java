@@ -65,7 +65,6 @@ public class KlienciGUI {
                 return label;
             });
 
-            // Pokazuj szczegóły klienta po kliknięciu
             lista.addListSelectionListener(e -> {
                 if (!e.getValueIsAdjusting()) {
                     Klient wybrany = lista.getSelectedValue();
@@ -85,7 +84,6 @@ public class KlienciGUI {
             panel.add(scrollPane, BorderLayout.CENTER);
 
             JPanel przyciski = new JPanel();
-
             JButton dodajBtn = new JButton("Dodaj nowego klienta");
             JButton edytujBtn = new JButton("Edytuj klienta");
             JButton usunBtn = new JButton("Usuń klienta");
@@ -95,10 +93,8 @@ public class KlienciGUI {
             przyciski.add(dodajBtn);
             przyciski.add(edytujBtn);
             przyciski.add(usunBtn);
-
             panel.add(przyciski, BorderLayout.SOUTH);
 
-            // Dodawanie klienta
             dodajBtn.addActionListener(e -> {
                 JTextField imieField = new JTextField();
                 JTextField nazwiskoField = new JTextField();
@@ -114,12 +110,19 @@ public class KlienciGUI {
                 int result = JOptionPane.showConfirmDialog(frame, addPanel, "Nowy klient", JOptionPane.OK_CANCEL_OPTION);
                 if (result == JOptionPane.OK_OPTION) {
                     try {
-                        Klient nowy = new Klient(
-                                imieField.getText().trim(),
-                                nazwiskoField.getText().trim(),
-                                dowodField.getText().trim(),
-                                opisField.getText().trim()
-                        );
+                        String imie = imieField.getText().trim();
+                        String nazwisko = nazwiskoField.getText().trim();
+                        String dowod = dowodField.getText().trim();
+                        String opis = opisField.getText().trim();
+
+                        if (imie.isEmpty() || nazwisko.isEmpty() || dowod.isEmpty()) {
+                            throw new IllegalArgumentException("Imię, nazwisko i numer dowodu są wymagane.");
+                        }
+                        if (!dowod.matches("[A-Z]{3}[0-9]{6}")) {
+                            throw new IllegalArgumentException("Numer dowodu powinien mieć format: 3 wielkie litery i 6 cyfr (np. ABC123456)");
+                        }
+
+                        Klient nowy = new Klient(imie, nazwisko, dowod, opis);
                         serwis.dodajKlienta(nowy);
                         io.zapisz(serwis.pobierzWszystkichKlientow(), KonfiguracjaPlikow.SCIEZKA_KLIENCI);
                         listModel.addElement(nowy);
@@ -129,7 +132,6 @@ public class KlienciGUI {
                 }
             });
 
-            // Edycja klienta
             edytujBtn.addActionListener(e -> {
                 Klient wybrany = lista.getSelectedValue();
                 if (wybrany == null) {
@@ -150,27 +152,32 @@ public class KlienciGUI {
 
                 int wynik = JOptionPane.showConfirmDialog(frame, editPanel, "Edytuj klienta", JOptionPane.OK_CANCEL_OPTION);
                 if (wynik == JOptionPane.OK_OPTION) {
-                    Klient nowy = new Klient(
-                            imieField.getText().trim(),
-                            nazwiskoField.getText().trim(),
-                            dowodField.getText().trim(),
-                            opisField.getText().trim()
-                    );
+                    try {
+                        String imie = imieField.getText().trim();
+                        String nazwisko = nazwiskoField.getText().trim();
+                        String dowod = dowodField.getText().trim();
+                        String opis = opisField.getText().trim();
 
-                    boolean ok = serwis.aktualizujKlienta(wybrany.getNumerDowodu(), nowy);
-                    if (ok) {
-                        try {
+                        if (imie.isEmpty() || nazwisko.isEmpty() || dowod.isEmpty()) {
+                            throw new IllegalArgumentException("Imię, nazwisko i numer dowodu są wymagane.");
+                        }
+                        if (!dowod.matches("[A-Z]{3}[0-9]{6}")) {
+                            throw new IllegalArgumentException("Numer dowodu powinien mieć format: 3 wielkie litery i 6 cyfr (np. ABC123456)");
+                        }
+
+                        Klient nowy = new Klient(imie, nazwisko, dowod, opis);
+                        boolean ok = serwis.aktualizujKlienta(wybrany.getNumerDowodu(), nowy);
+                        if (ok) {
                             io.zapisz(serwis.pobierzWszystkichKlientow(), KonfiguracjaPlikow.SCIEZKA_KLIENCI);
                             listModel.setElementAt(nowy, lista.getSelectedIndex());
                             JOptionPane.showMessageDialog(frame, "Zaktualizowano dane klienta.");
-                        } catch (IOException ex) {
-                            JOptionPane.showMessageDialog(frame, "Błąd zapisu: " + ex.getMessage());
                         }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(frame, "Błąd: " + ex.getMessage());
                     }
                 }
             });
 
-            // Usuwanie klienta
             usunBtn.addActionListener(e -> {
                 Klient wybrany = lista.getSelectedValue();
                 if (wybrany == null) {
