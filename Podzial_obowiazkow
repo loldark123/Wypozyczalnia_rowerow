@@ -2,17 +2,15 @@ Podział obowiazkow w zespole:
 
 
 
-Artur    ---> 3. Tworzenie GUI w SWING & 6. Raportowanie.
+Artur    --->  Tworzenie GUI w SWING,  Raportowanie & backend i logika.
 
-Olga     ---> 2. Implementacja logiki (backend) & 7. Testy jednostkowe
+Olga     --->  Testy jednostkowe & testy aplikacji.
 
-Grzesiek ---> 4. Obsługa wielowątkowości (ThreadPool)
+Grzesiek --->  Obsługa wielowątkowości (ThreadPool) & testy aplikacji.  
 
-Linh ? 
+Linh     ---> projekt modeli klas i testy aplikacyji
 
-Radek ? 
+Radek    ---> Dokumentacja techniczna i komentarze. 
 
-
-????? 7. Obsługa zapisu/odczytu do pliku & 1. Projektowanie modelu danych (klasy/obiekty)
 
 
