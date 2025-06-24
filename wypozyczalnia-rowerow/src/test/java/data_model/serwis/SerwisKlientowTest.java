@@ -104,10 +104,39 @@ class SerwisKlientowTest {
 
     @Test
     void wyczysc_usuwaWszystkichKlientow() {
-        serwis.dodajKlienta(new Klient("A", "B", "III666777", ""));
-        serwis.dodajKlienta(new Klient("C", "D", "JJJ888999", ""));
+        serwis.dodajKlienta(new Klient("Aleksander", "Puszkin", "III666777", ""));
+        serwis.dodajKlienta(new Klient("Antoni", "Czechow", "JJJ888999", ""));
         serwis.wyczysc();
 
         assertTrue(serwis.pobierzWszystkichKlientow().isEmpty());
     }
+    
+
+    @Test
+    void pobierzWszystkichKlientow_listaJestKopiaNieOryginalem() {
+        Klient klient = new Klient("Robert", "Kubica", "RRR111222", "");
+        serwis.dodajKlienta(klient);
+
+        List<Klient> lista = serwis.pobierzWszystkichKlientow();
+        lista.clear();  // modyfikacja lokalnej kopii
+
+        assertEquals(1, serwis.pobierzWszystkichKlientow().size());
+    }
+
+    @Test
+    void aktualizujKlienta_nieistniejacyKlient() {
+        Klient nowy = new Klient("Testian", "Testowicz", "ZZZ000111", "Nieistniejący");
+        boolean zaktualizowano = serwis.aktualizujKlienta("ZZZ000111", nowy);
+
+        assertFalse(zaktualizowano);
+    }
+
+    @Test
+    void usunKlienta_ignorujeWielkoscLiter() {
+        serwis.dodajKlienta(new Klient("Tomasz", "Kot", "MMM999888", ""));
+        boolean usunieto = serwis.usunKlienta("mmm999888");
+        assertTrue(usunieto);
+        assertTrue(serwis.pobierzWszystkichKlientow().isEmpty());
+    }
+
 }

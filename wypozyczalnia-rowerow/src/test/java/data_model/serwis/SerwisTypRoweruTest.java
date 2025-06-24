@@ -87,4 +87,34 @@ class SerwisTypRoweruTest {
         assertTrue(usunieto, "usunTyp_poObiekcie: usunięcie typu powiodło się");
         assertTrue(serwis.pobierzWszystkieTypy().isEmpty(), "usunTyp_poObiekcie: lista typów jest pusta");
     }
+    
+    @Test
+    /**
+     * Test na poprawną aktualizację typu roweru
+     */
+    void aktualizujTypRoweru_aktualizujePoprawnie() {
+        TypRoweru stary = new TypRoweru("Górski", "Opis stary");
+        serwis.dodajTypRoweru(stary);
+
+        TypRoweru nowy = new TypRoweru("NowyGórski", "Nowy opis");
+        boolean zaktualizowano = serwis.aktualizujTypRoweru("górski", nowy);
+
+        assertTrue(zaktualizowano, "aktualizujTypRoweru_aktualizujePoprawnie: aktualizacja powiodła się");
+
+        Optional<TypRoweru> wynik = serwis.znajdzTypPoNazwie("NowyGórski");
+        assertTrue(wynik.isPresent(), "aktualizujTypRoweru_aktualizujePoprawnie: nowy typ istnieje");
+        assertEquals("Nowy opis", wynik.get().getOpis(), "aktualizujTypRoweru_aktualizujePoprawnie: opis jest zaktualizowany");
+    }
+
+    /**
+     * Test na wykonanie aktualizacji gdy rower nie istnieje
+     */
+    @Test
+    void aktualizujTypRoweru_nieIstnieje() {
+        TypRoweru nowy = new TypRoweru("Jakis", "Opis");
+
+        boolean zaktualizowano = serwis.aktualizujTypRoweru("nieistnieje", nowy);
+        assertFalse(zaktualizowano, "aktualizujTypRoweru_nieIstnieje: aktualizacja nie powiodła się");
+    }
+
 }

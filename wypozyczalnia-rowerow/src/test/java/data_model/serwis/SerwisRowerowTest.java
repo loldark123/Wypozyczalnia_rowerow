@@ -49,7 +49,7 @@ class SerwisRowerowTest {
     }
 
     /**
-     * Test wyszukuje roweru po marce i modelu.
+     * Test wyszukiwania roweru po marce i modelu.
      */
     @Test
     void znajdzRower_istnieje() {
@@ -86,7 +86,7 @@ class SerwisRowerowTest {
     }
 
     /**
-     * Test filtruje rowery po typie.
+     * Test filtrowania roweru po typie.
      */
     @Test
     void pobierzRoweryPoTypie() {
@@ -108,4 +108,65 @@ class SerwisRowerowTest {
 
         assertTrue(serwis.pobierzWszystkieRowery().isEmpty(), "wyczysc_czysciListe: lista rowerów jest pusta po wyczyszczeniu");
     }
+    
+    /**
+     * Test sprawdzania duplikatu numeru seryjnego
+     */
+    @Test
+    void dodajRower_duplikatNumeruSeryjnego_zwracaFalse() {
+        Rower rower1 = new Rower(gorski, "Rower1", "Model1", 27, "", "BA010");
+        Rower rower2 = new Rower(miejski, "Rower2", "Model2", 28, "", "BA010"); // ten sam numer seryjny
+
+        assertTrue(serwis.dodajRower(rower1));
+        assertFalse(serwis.dodajRower(rower2), "Nie powinno dodawać roweru z duplikatem numeru seryjnego");
+        assertEquals(1, serwis.pobierzWszystkieRowery().size());
+    }
+
+    /**
+     * Test sprawdzania czy numer seryjny istnieje, zwraca true jeśli tak
+     */
+    @Test
+    void czyNumerSeryjnyIstnieje_zwrociTrueDlaIstniejacegoNumeru() {
+        serwis.dodajRower(new Rower(szosowy, "Rower3", "Model3", 29, "", "SN011"));
+        assertTrue(serwis.czyNumerSeryjnyIstnieje("sn011"));
+    }
+
+
+    /**
+     * Test sprawdzania czy numer seryjny istnieje, zwraca false jeśli nie
+     */
+    
+    @Test
+    void czyNumerSeryjnyIstnieje_zwrociFalseDlaBrakuNumeru() {
+        assertFalse(serwis.czyNumerSeryjnyIstnieje("SN999"));
+    }
+
+    /**
+     * Test sprawdzania czy rower nieistnieje
+     */
+    @Test
+    void znajdzRower_nieIstnieje() {
+        Optional<Rower> wynik = serwis.znajdzRower("NieMaTakiego", "Modelu");
+        assertTrue(wynik.isEmpty(), "Rower nie powinien zostać znaleziony");
+    }
+
+    /**
+     * Test sprawdzania aktualizacji roweru
+     */
+    @Test
+    void aktualizujRower_istniejacyRower_zostajeZmieniony() {
+        Rower stary = new Rower(miejski, "StaraMarka", "StaryModel", 26, "Opis", "BA012");
+        serwis.dodajRower(stary);
+
+        Rower nowy = new Rower(gorski, "NowaMarka", "NowyModel", 29, "Nowy Opis", "BA013");
+        boolean wynik = serwis.aktualizujRower("StaraMarka", "StaryModel", nowy);
+
+        assertTrue(wynik);
+        Optional<Rower> zmieniony = serwis.znajdzRower("NowaMarka", "NowyModel");
+        assertTrue(zmieniony.isPresent());
+        assertEquals("BA013", zmieniony.get().getNumerSeryjny());
+        assertEquals(gorski, zmieniony.get().getTyp());
+    }
+
+
 }
