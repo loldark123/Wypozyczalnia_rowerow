@@ -10,7 +10,36 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Graficzny interfejs użytkownika do wyświetlania raportów wypożyczeń w systemie wypożyczalni rowerów.
+ * Klasa tworzy okno z raportem tekstowym pokazującym aktywne wypożyczenia i opóźnione zwroty
+ * na określoną datę symulacji. Raport jest wyświetlany w czytelnym formacie tabelarycznym
+ * z użyciem czcionki monospaced.
+ * 
+ * @see SerwisWypozyczen
+ * @see Wypozyczenie
+ * @see SerwisWypozyczen#pobierzAktywneWypozyczenia(LocalDate)
+ * @see SerwisWypozyczen#pobierzWypozyczeniaSpoznione(LocalDate)
+ */
 public class RaportWypozyczenGUI {
+
+    /**
+     * Otwiera okno z raportem wypożyczeń na określoną datę symulacji.
+     * Metoda tworzy okno zawierające raport tekstowy z dwoma sekcjami:
+     * aktywne wypożyczenia i opóźnione zwroty. Dane są pobierane z serwisu
+     * wypożyczeń i formatowane w czytelny sposób.
+     *
+     * @param parent okno nadrzędne, względem którego centrowane jest okno raportu
+     * @param dataSymulacji data, na którą generowany jest raport wypożyczeń
+     * @param serwis serwis wypożyczeń dostarczający dane do raportu
+     * 
+     * @see JFrame#setLocationRelativeTo(Component)
+     * @see JFrame#DISPOSE_ON_CLOSE
+     * @see JTextArea#setEditable(boolean)
+     * @see Font#Font(String, int, int)
+     * @see JScrollPane
+     * @see #formatWypozyczenie(Wypozyczenie)
+     */
     public static void otworz(JFrame parent, LocalDate dataSymulacji, SerwisWypozyczen serwis) {
         JFrame frame = new JFrame("Raport wypożyczeń - " + dataSymulacji);
         frame.setSize(800, 500);

@@ -11,7 +11,49 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Graficzny interfejs użytkownika do zarządzania typami rowerów w systemie wypożyczalni.
+ * Klasa tworzy modalne okno dialogowe umożliwiające pełne zarządzanie typami rowerów:
+ * przeglądanie, dodawanie, edycję i usuwanie typów z walidacją biznesową.
+ * 
+ * @see SerwisTypRoweru
+ * @see PlikTypowRowerowIO
+ * @see TypRoweru
+ * @see SerwisWypozyczen
+ */
 public class TypyRowerowGUI {
+
+    /**
+     * Otwiera modalne okno dialogowe do zarządzania typami rowerów.
+     * Tworzy interfejs z listą istniejących typów, formularzem do dodawania nowych typów.
+     * Wszystkie zmiany są automatycznie zapisywane do pliku i synchronizowane
+     * 
+     * @param parent okno nadrzędne, względem którego centrowane jest okno dialogowe;
+     *               może być {@code null} dla centrowania względem ekranu
+     * @param serwis serwis do obsługi operacji CRUD na typach rowerów;
+     *               nie może być {@code null}
+     * @param comboBox opcjonalny ComboBox do automatycznej aktualizacji po zmianach;
+     *                 może być {@code null} jeśli aktualizacja nie jest wymagana
+     * @param io obiekt do obsługi operacji I/O na plikach typów rowerów;
+     *           nie może być {@code null}
+     * @param rowery lista wszystkich rowerów w systemie używana do walidacji
+     *               czy typ może być usunięty; nie może być {@code null}
+     * @param wypozyczeniaSerwis serwis wypożyczeń używany do sprawdzania
+     *                          czy typ jest w użyciu; może być {@code null}
+     *                          (wtedy pomijana jest walidacja użycia)
+     * 
+     * @throws IllegalArgumentException jeśli którykolwiek z wymaganych parametrów jest {@code null}
+     * 
+     * @see JDialog#setModal(boolean)
+     * @see JDialog#setLocationRelativeTo(Component)
+     * @see DefaultListModel
+     * @see ListSelectionModel#SINGLE_SELECTION
+     * @see SerwisTypRoweru#dodajTypRoweru(TypRoweru)
+     * @see SerwisTypRoweru#usunTyp(TypRoweru)
+     * @see SerwisTypRoweru#aktualizujTypRoweru(String, TypRoweru)
+     * @see SerwisWypozyczen#czyTypJestWUzyciu(TypRoweru, List)
+     * @see PlikTypowRowerowIO#zapisz(List, String)
+     */
     public static void otworz(JFrame parent, SerwisTypRoweru serwis, JComboBox<TypRoweru> comboBox, PlikTypowRowerowIO io, List<Rower> rowery, SerwisWypozyczen wypozyczeniaSerwis) {
         JDialog dialog = new JDialog(parent, "Typy rowerów", true);
         dialog.setSize(400, 300);

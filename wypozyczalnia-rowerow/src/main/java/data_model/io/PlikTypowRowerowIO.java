@@ -8,11 +8,13 @@ import java.util.List;
 
 /**
  * Klasa obsługująca zapis i odczyt typów rowerów z/do pliku za pomocą serializacji.
+ * Zapisuje i wczytuje listę typów rowerów w formacie binarnym.
  */
 public class PlikTypowRowerowIO {
 
     /**
      * Zapisuje listę typów rowerów do wskazanego pliku.
+     * Automatycznie tworzy strukturę katalogów jeśli nie istnieje.
      *
      * @param typy    lista typów do zapisania
      * @param sciezka ścieżka pliku
@@ -32,6 +34,7 @@ public class PlikTypowRowerowIO {
 
     /**
      * Wczytuje listę typów rowerów z pliku.
+     * Implementuje bezpieczne rzutowanie z kontrolą typu.
      *
      * @param sciezka ścieżka pliku
      * @return lista wczytanych typów lub pusta lista, jeśli plik nie istnieje lub wystąpił błąd
@@ -39,12 +42,16 @@ public class PlikTypowRowerowIO {
     @SuppressWarnings("unchecked")
     public List<TypRoweru> wczytaj(String sciezka) {
         File plik = new File(sciezka);
+
+        // Sprawdzamy czy plik istnieje
         if (!plik.exists()) {
             return new ArrayList<>();
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(plik))) {
             Object obj = ois.readObject();
+
+            // Walidacja typu wczytanego obiektu
             if (obj instanceof List<?>) {
                 return (List<TypRoweru>) obj;
             } else {
