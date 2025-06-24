@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"data_model.io"},{"l":"data_model.model"},{"l":"konfiguracja"},{"l":"util"}];updateSearchResults();

@@ -9,11 +9,32 @@ import data_model.serwis.SerwisWypozyczen;
 import konfiguracja.KonfiguracjaPlikow;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionListener;
+
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Graficzny interfejs użytkownika do zarządzania klientami w systemie wypożyczalni rowerów.
+ * Klasa tworzy okno Swing wyświetlające listę klientów z możliwością ich przeglądania
+ * i zarządzania. Dane klientów są wczytywane z pliku przy uruchomieniu aplikacji.
+ * 
+ * @see SerwisKlientow
+ * @see PlikKlientowIO
+ * @see Klient
+ * @see KonfiguracjaPlikow
+ */
 public class KlienciGUI {
+
+    /**
+     * Główna metoda uruchamiająca kompleksowy interfejs zarządzania klientami.
+     * Tworzy okno z listą klientów, panelem szczegółów oraz przyciskami funkcjonalnymi
+     * umożliwiającymi pełne zarządzanie danymi klientów z walidacją biznesową
+     * i automatyczną synchronizacją z systemem plików.
+     *
+     * @param args argumenty wiersza poleceń
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Lista klientów");

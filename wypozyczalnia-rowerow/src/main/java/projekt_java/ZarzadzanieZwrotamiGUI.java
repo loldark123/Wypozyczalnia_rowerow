@@ -12,7 +12,28 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Główny interfejs graficzny do zarządzania wypożyczeniami w systemie wypożyczalni rowerów.
+ * Klasa tworzy kompleksowe okno umożliwiające tworzenie nowych wypożyczeń, sprawdzanie
+ * dostępności rowerów, generowanie raportów oraz zarządzanie zwrotami. Interfejs integruje
+ * wszystkie główne funkcjonalności systemu wypożyczalni w jednym miejscu.
+ * 
+ * @see SerwisWypozyczen
+ * @see Wypozyczenie
+ * @see SwingWorker
+ */
 public class ZarzadzanieZwrotamiGUI {
+
+    /**
+     * Uruchamia modalne okno dialogowe do zarządzania zwrotami wypożyczeń.
+     * Tworzy interfejs z listą aktywnych wypożyczeń, funkcją wyszukiwania
+     * oraz możliwością masowego zwracania zaznaczonych wypożyczeń.
+     * Wszystkie zmiany są automatycznie zapisywane do pliku.
+     *
+     * @param parent okno nadrzędne, względem którego centrowane jest okno dialogowe
+     * @param serwisWypozyczen serwis wypożyczeń dostarczający dane i logikę biznesową
+     * @param wypozyczenieIO obiekt do operacji zapisu wypożyczeń do pliku
+     */
     public static void uruchom(JFrame parent, SerwisWypozyczen serwisWypozyczen, PlikWypozyczenIO wypozyczenieIO) {
         JDialog dialog = new JDialog(parent, "Zarządzanie wypożyczeniami", true);
         dialog.setSize(700, 400);

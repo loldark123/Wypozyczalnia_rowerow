@@ -15,7 +15,33 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Główny interfejs graficzny do zarządzania wypożyczeniami w systemie wypożyczalni rowerów.
+ * Klasa tworzy kompleksowe okno umożliwiające tworzenie nowych wypożyczeń, sprawdzanie
+ * dostępności rowerów, generowanie raportów oraz zarządzanie zwrotami. Interfejs integruje
+ * wszystkie główne funkcjonalności systemu wypożyczalni w jednym miejscu.
+ * 
+ * @see SerwisWypozyczen
+ * @see SerwisKlientow
+ * @see SerwisRowerow
+ * @see ZarzadzanieZwrotamiGUI
+ * @see Wypozyczenie
+ */
 public class WypozyczeniaGUI {
+
+    /**
+     * Główna metoda uruchamiająca interfejs zarządzania wypożyczeniami.
+     * Tworzy okno Swing z formularzem wypożyczenia, przyciskami funkcjonalnymi
+     * oraz implementuje wszystkie operacje związane z wypożyczeniami rowerów.
+     * Wykorzystuje asynchroniczne operacje dla lepszej responsywności interfejsu.
+     * 
+     * @param args Argumenty linii poleceń
+     * 
+     * @see SwingUtilities#invokeLater(Runnable)
+     * @see JFrame
+     * @see GridLayout
+     * @see SwingWorker
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Nowe wypożyczenie");

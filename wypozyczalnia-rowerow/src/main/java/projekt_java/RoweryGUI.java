@@ -15,7 +15,30 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
+
+/**
+ * Główne okno zarządzania rowerami w systemie wypożyczalni.
+ * Umożliwia wyświetlanie listy rowerów, dodawanie nowych, edycję istniejących,
+ * usuwanie oraz zarządzanie typami rowerów.
+ * 
+ * @see SerwisRowerow
+ * @see SerwisTypRoweru
+ * @see PlikRowerowIO
+ * @see PlikTypowRowerowIO
+ * @see Rower
+ * @see TypRoweru
+ * @see TypyRowerowGUI
+ */
 public class RoweryGUI {
+
+    /**
+     * Główna metoda uruchamiająca interfejs zarządzania rowerami.
+     * Tworzy okno z listą rowerów, panelem przycisków funkcjonalnych oraz
+     * implementuje wszystkie operacje CRUD. Wczytuje dane rowerów i typów
+     * z plików przy inicjalizacji i synchronizuje zmiany z systemem plików.
+     * 
+     * @param args argumenty wiersza poleceń
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Zarządzanie rowerami");
